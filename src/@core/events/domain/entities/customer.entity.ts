@@ -1,20 +1,21 @@
-import { AggregateRoot } from 'src/@core/common/domain/aggregate-root';
-import { Cpf } from 'src/@core/common/domain/value-objects/cpf.vo';
-import { Name } from 'src/@core/common/domain/value-objects/name.vo';
-import { Uuid } from 'src/@core/common/domain/value-objects/uuid.vo';
+import { AggregateRoot } from '../../../common/domain/aggregate-root';
+import Cpf from '../../../common/domain/value-objects/cpf.vo';
+import Uuid from '../../../common/domain/value-objects/uuid.vo';
+import { CustomerChangedName } from '../events/domain-events/customer-changed-name.event';
+import { CustomerCreated } from '../events/domain-events/customer-created.event';
 
-export class CustomerId extends Uuid {}
+export class CustomerId extends Uuid { }
 
 export type CustomerConstructorProps = {
   id?: CustomerId | string;
   cpf: Cpf;
-  name: Name;
+  name: string;
 };
 
 export class Customer extends AggregateRoot {
   id: CustomerId;
   cpf: Cpf;
-  name: Name;
+  name: string;
 
   constructor(props: CustomerConstructorProps) {
     super();
@@ -27,16 +28,25 @@ export class Customer extends AggregateRoot {
   }
 
   static create(command: { name: string; cpf: string }) {
-    return new Customer({
+    const customer = new Customer({
+      name: command.name,
       cpf: new Cpf(command.cpf),
-      name: new Name(command.name),
     });
+    customer.addEvent(
+      new CustomerCreated(customer.id, customer.name, customer.cpf),
+    );
+    return customer;
+  }
+
+  changeName(name: string) {
+    this.name = name;
+    this.addEvent(new CustomerChangedName(this.id, this.name));
   }
 
   toJSON() {
     return {
-      id: this.id,
-      cpf: this.cpf,
+      id: this.id.value,
+      cpf: this.cpf.value,
       name: this.name,
     };
   }

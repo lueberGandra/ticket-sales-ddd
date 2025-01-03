@@ -1,12 +1,14 @@
-import { Uuid } from 'src/@core/common/domain/value-objects/uuid.vo';
 import { AggregateRoot } from '../../../common/domain/aggregate-root';
+import Uuid from '../../../common/domain/value-objects/uuid.vo';
+import { PartnerChangedName } from '../events/domain-events/partner-changed-name.event';
+import { PartnerCreated } from '../events/domain-events/partner-created.event';
 import { Event } from './event.entity';
 
-export class PartnerId extends Uuid {}
+export class PartnerId extends Uuid { }
 
 export type InitEventCommand = {
   name: string;
-  description: string;
+  description?: string | null;
   date: Date;
 };
 
@@ -21,7 +23,6 @@ export class Partner extends AggregateRoot {
 
   constructor(props: PartnerConstructorProps, id?: PartnerId) {
     super();
-    console.log(props, id);
     this.id =
       typeof props.id === 'string'
         ? new PartnerId(props.id)
@@ -30,9 +31,11 @@ export class Partner extends AggregateRoot {
   }
 
   static create(command: { name: string }) {
-    return new Partner({
+    const partner = new Partner({
       name: command.name,
     });
+    partner.addEvent(new PartnerCreated(partner.id, partner.name));
+    return partner;
   }
 
   initEvent(command: InitEventCommand) {
@@ -44,11 +47,12 @@ export class Partner extends AggregateRoot {
 
   changeName(name: string) {
     this.name = name;
+    this.addEvent(new PartnerChangedName(this.id, this.name));
   }
 
   toJSON() {
     return {
-      id: this.id,
+      id: this.id.value,
       name: this.name,
     };
   }

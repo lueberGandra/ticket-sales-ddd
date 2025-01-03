@@ -1,7 +1,7 @@
 import { MikroORM, MySqlDriver } from '@mikro-orm/mysql';
-import { PartnerSchema } from '../schemas';
-import { Partner } from '../../../domain/entities/partner.entity';
-import { PartnerMysqlRepository } from './partner-mysql.repository';
+import { PartnerSchema } from '../../schemas';
+import { Partner } from '../../../../domain/entities/partner.entity';
+import { PartnerMysqlRepository } from '../partner-mysql.repository';
 
 test('partner repository', async () => {
   const orm = await MikroORM.init<MySqlDriver>({
@@ -14,21 +14,23 @@ test('partner repository', async () => {
     type: 'mysql',
     forceEntityConstructor: true,
   });
-
   await orm.schema.refreshDatabase();
   const em = orm.em.fork();
   const partnerRepo = new PartnerMysqlRepository(em);
+
   const partner = Partner.create({ name: 'Partner 1' });
   await partnerRepo.add(partner);
   await em.flush();
-  em.clear();
+  await em.clear(); // limpa o cache do entity manager (unit of work)
+
   let partnerFound = await partnerRepo.findById(partner.id);
   expect(partnerFound.id.equals(partner.id)).toBeTruthy();
   expect(partnerFound.name).toBe(partner.name);
+
   partner.changeName('Partner 2');
   await partnerRepo.add(partner);
   await em.flush();
-  em.clear();
+  await em.clear(); // limpa o cache do entity manager (unit of work)
 
   partnerFound = await partnerRepo.findById(partner.id);
   expect(partnerFound.id.equals(partner.id)).toBeTruthy();
@@ -36,8 +38,10 @@ test('partner repository', async () => {
 
   console.log(await partnerRepo.findAll());
 
-  await partnerRepo.delete(partner);
+  partnerRepo.delete(partner);
   await em.flush();
+
   console.log(await partnerRepo.findAll());
+
   await orm.close();
 });

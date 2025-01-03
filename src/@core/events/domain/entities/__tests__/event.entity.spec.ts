@@ -1,57 +1,77 @@
 import { Event } from '../event.entity';
 import { PartnerId } from '../partner.entity';
+import { initOrm } from './helpers';
 
-test('deve criar um evento', () => {
-  const event = Event.create({
-    name: 'Evento de teste',
-    description: 'Descrição do evento de teste',
-    date: new Date(),
-    partner_id: new PartnerId(),
+describe('Event Entity Unit Tests', () => {
+  initOrm();
+  it('deve criar um evento', () => {
+    const event = Event.create({
+      name: 'Evento 1',
+      description: 'Descrição do evento 1',
+      date: new Date(),
+      partner_id: new PartnerId(),
+    });
+
+    event.addSection({
+      name: 'Sessão 1',
+      description: 'Descrição da sessão 1',
+      total_spots: 100,
+      price: 1000,
+    });
+
+    expect(event.sections.size).toBe(1);
+    expect(event.total_spots).toBe(100);
+
+    const [section] = event.sections;
+
+    expect(section.spots.size).toBe(100);
+
+    // const spot = EventSpot.create();
+
+    // section.spots.add(spot);
+
+    // console.dir(event.toJSON(), { depth: 10 });
+
+    // não é valido
+    // customer = new Customer({
+    //   id: '123', new CustomerId() || new CustomerId('')
+    //   name: 'João',
+    //   cpf: '99346413050',
+    // });
   });
 
-  event.addSection({
-    name: 'Seção de teste',
-    description: 'Descrição da seção de teste',
-    price: 1000,
-    total_spots: 100,
-  });
+  test('deve publicar todos os itens do evento', () => {
+    const event = Event.create({
+      name: 'Evento 1',
+      description: 'Descrição do evento 1',
+      date: new Date(),
+      partner_id: new PartnerId(),
+    });
 
-  expect(event.sections.size).toBe(1);
-  expect(event.total_spots).toBe(100);
-  const [section] = event.sections;
-  expect(section.spots.size).toBe(100);
-});
+    event.addSection({
+      name: 'Sessão 1',
+      description: 'Descrição da sessão 1',
+      total_spots: 100,
+      price: 1000,
+    });
 
-test('deve publicar todos os itens do evento', () => {
-  const event = Event.create({
-    name: 'Evento de teste',
-    description: 'Descrição do evento de teste',
-    date: new Date(),
-    partner_id: new PartnerId(),
-  });
+    event.addSection({
+      name: 'Sessão 2',
+      description: 'Descrição da sessão 2',
+      total_spots: 1000,
+      price: 50,
+    });
 
-  event.addSection({
-    name: 'Seção de teste',
-    description: 'Descrição da seção de teste',
-    price: 1000,
-    total_spots: 100,
-  });
+    event.publishAll();
 
-  event.addSection({
-    name: 'Seção de teste 2',
-    description: 'Descrição da seção de teste 2',
-    price: 50,
-    total_spots: 1000,
-  });
+    expect(event.is_published).toBe(true);
 
-  event.publishAll();
-  expect(event.is_published).toBe(true);
+    const [section1, section2] = event._sections.values();
+    expect(section1.is_published).toBe(true);
+    expect(section2.is_published).toBe(true);
 
-  const [section1, section2] = event.sections.values();
-  expect(section1.is_published).toBe(true);
-  expect(section2.is_published).toBe(true);
-
-  [...section1.spots, ...section2.spots].forEach((spot) => {
-    expect(spot.is_published).toBe(true);
+    [...section1.spots, ...section2.spots].forEach((spot) => {
+      expect(spot.is_published).toBe(true);
+    });
   });
 });

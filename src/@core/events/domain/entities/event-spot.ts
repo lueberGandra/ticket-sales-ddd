@@ -1,7 +1,7 @@
-import { Entity } from 'src/@core/common/domain/entity';
-import { Uuid } from 'src/@core/common/domain/value-objects/uuid.vo';
+import { Entity } from '../../../common/domain/entity';
+import Uuid from '../../../common/domain/value-objects/uuid.vo';
 
-export class EventSpotId extends Uuid {}
+export class EventSpotId extends Uuid { }
 
 export type EventSpotConstructorProps = {
   id?: EventSpotId | string;
@@ -47,11 +47,15 @@ export class EventSpot extends Entity {
     this.is_published = false;
   }
 
+  markAsReserved() {
+    this.is_reserved = true;
+  }
+
   toJSON() {
     return {
-      id: this.id,
+      id: this.id.value,
       location: this.location,
-      is_reserved: this.is_reserved,
+      reserved: this.is_reserved,
       is_published: this.is_published,
     };
   }

@@ -2,7 +2,7 @@ import { MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import { PartnerSchema } from './schemas';
 import { Partner } from '../../domain/entities/partner.entity';
 
-test('must create a partner', async () => {
+test('deve criar um partner', async () => {
   const orm = await MikroORM.init<MySqlDriver>({
     entities: [PartnerSchema],
     dbName: 'events',
@@ -13,18 +13,17 @@ test('must create a partner', async () => {
     type: 'mysql',
     forceEntityConstructor: true,
   });
-
   await orm.schema.refreshDatabase();
-
   const em = orm.em.fork();
 
   const partner = Partner.create({ name: 'Partner 1' });
   console.log(partner.id);
   em.persist(partner);
-
   await em.flush();
-  em.clear();
+  await em.clear(); // limpa o cache do entity manager (unit of work)
+
   const partnerFound = await em.findOne(Partner, { id: partner.id });
   console.log(partnerFound);
+
   await orm.close();
 });

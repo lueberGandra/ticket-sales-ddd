@@ -13,7 +13,7 @@ export class Cpf extends ValueObject<string> {
       );
     }
 
-    const allDigitsEquals = /^d{1}(\d)\1{10}$/.test(this.value);
+    const allDigitsEquals = /^\d{1}(\d)\1{10}$/.test(this.value);
     if (allDigitsEquals) {
       throw new InvalidCpfError('CPF must have at least two different digits');
     }
@@ -37,8 +37,8 @@ export class Cpf extends ValueObject<string> {
     }
 
     if (
-      firstDigit != parseInt(this.value.charAt(9)) ||
-      secondDigit != parseInt(this.value.charAt(10))
+      firstDigit !== parseInt(this.value.charAt(9)) ||
+      secondDigit !== parseInt(this.value.charAt(10))
     ) {
       throw new InvalidCpfError('CPF is invalid');
     }
@@ -46,8 +46,10 @@ export class Cpf extends ValueObject<string> {
 }
 
 export class InvalidCpfError extends Error {
-  constructor(message: string) {
+  constructor(message) {
     super(message);
     this.name = 'InvalidCpfError';
   }
 }
+
+export default Cpf;
